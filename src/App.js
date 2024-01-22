@@ -1,27 +1,67 @@
 import {useState} from 'react';
 
-export default function Board() {
+export default function Game() {
+    function gotoMove(i) {
+        const newHistory = history.slice(0, i + 1);
+        setHistory(newHistory);
+        setCurrentMove(i);
+    }
+
+    function handlePlay(new_squares) {
+        const newHistory = history.slice();
+        newHistory.push(new_squares);
+        setHistory(newHistory);
+        setCurrentMove(currentMove + 1);
+    }
+
+    const [history, setHistory] = useState([Array(9).fill(null)]);
+    const [currentMove, setCurrentMove] = useState(0);
+    const xIsNext = currentMove % 2 === 0;
+    const currBoard = history[currentMove];
+
+    const moves = history.map((_squares, move) => {
+        let desc = move === 0 ? 'Go to game start' : 'Go to move #' + move;
+        return (
+            <li id={move}>
+                <button onClick={() => gotoMove(move)}>{desc}</button>
+            </li>
+        );
+    });
+
+    return (
+        <div className="game">
+            <div className="game-board">
+                <Board squares={currBoard} xIsNext={xIsNext} onPlay={handlePlay}/>
+            </div>
+            <div className="game-info">
+                <ol>
+                    {moves}
+                </ol>
+            </div>
+        </div>
+    )
+
+}
+
+function Board({squares, xIsNext, onPlay}) {
     function handleClick(i) {
         if (squares[i] !== null || calculate_winner(squares) !== null) {
             return;
         }
 
         const nextSquares = squares.slice();
-        const nextMove = nextPlayer === true ? "X" : "O";
+        const nextMove = xIsNext ? "X" : "O";
         nextSquares[i] = nextMove;
-        setSquares(nextSquares);
-        setNextPlayer(!nextPlayer);
-    }
 
-    const [squares, setSquares] = useState(Array(9).fill(null));
-    const [nextPlayer, setNextPlayer] = useState(true);
+        onPlay(nextSquares);
+    }
 
     const winner = calculate_winner(squares);
     let status;
     if (winner) {
         status = 'Winner: ' + winner;
     } else {
-        status = 'Next player: ' + (nextPlayer ? 'X' : 'O');
+        status = 'Next player: ' + (xIsNext ? 'X' : 'O');
     }
 
     return (
